@@ -36,13 +36,11 @@ class KBERTopic(LoggingApp):
         self.threshold_sim = threshold_sim
         self.load_mode = kwargs.get('load_mode', False)
         self.model_name = kwargs.get('model_name', '')
-        self.kensho = kwargs.get('kensho', False)
         self.wiki = kwargs.get('wiki', False)
 
         self.logger.info("Start Loading files to use BERTopic")
-        self.concept_dict, self.concept_list = data_utils.load_concept(
-            self.kensho)
-        self.df = data_utils.load_news_dataset(self.kensho, only_news=True)
+        self.concept_dict, self.concept_list = data_utils.load_concept()
+        self.df = data_utils.load_news_dataset()
         self.tickers = self.df.ticker.apply(lambda x: x.split(',')).tolist()
 
         total_tic = []
@@ -84,14 +82,9 @@ class KBERTopic(LoggingApp):
 
         self.logger.info("Matching Concept to Ticker")
 
-        # TODO:합쳐도 될 것 같은데..?
-        if self.kensho:
-            concept_path, concept2news, scores = bertopic_fun.kensho_concept2ticker(
-                topic_model, self.concept_dict, BERTopic_ticker, self.concept_n, self.threshold_sim, self.classifier)
-        else:
-            results_df, concept2news, concept_path, scores = bertopic_fun.concept2ticker(
-                topic_model, self.concept_dict, self.total_ticker, BERTopic_ticker, self.concept_n, self.threshold_sim, self.classifier)
-
+        concept_path, concept2news, scores = bertopic_fun.concept2ticker(
+            topic_model, self.concept_dict, BERTopic_ticker, self.concept_n, self.threshold_sim, self.classifier)
+        
         self.logger.info(f"Saveing path : {concept_path}")
 
         self.logger.info(

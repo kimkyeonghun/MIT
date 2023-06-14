@@ -80,20 +80,20 @@ class DBRunner(LoggingApp):
             './sec_result/sec_concept.csv', index_col=0)
 
         newly_concat_df = pd.DataFrame(
-            [], columns=['concept', 'kensho', 'common', 'kermit'])
+            [], columns=['concept', 'origin', 'common', 'kermit'])
         for concept in news_df.concept:
             bertopic_row = news_df[news_df.concept == concept]
             keybert_row = keybert_results[keybert_results.concept == concept.upper(
             )]
             common_row = set(ast.literal_eval(
                 bertopic_row['common'].iloc[0])+ast.literal_eval(keybert_row['common'].iloc[0]))
-            kensho_row = set(ast.literal_eval(
-                bertopic_row['kensho'].iloc[0])+ast.literal_eval(keybert_row['etf'].iloc[0])) - common_row
+            origin_row = set(ast.literal_eval(
+                bertopic_row['origin'].iloc[0])+ast.literal_eval(keybert_row['etf'].iloc[0])) - common_row
             kermit_row = set(ast.literal_eval(bertopic_row['bertopic'].iloc[0])) & set(
                 ast.literal_eval(keybert_row['sec'].iloc[0])) - common_row
             newly_concat_df = newly_concat_df.append(
                 {"concept": concept,
-                 'kensho': list(kensho_row),
+                 'origin': list(origin_row),
                  'common': list(common_row),
                  'kermit': list(kermit_row)
                  }, ignore_index=True
@@ -123,24 +123,6 @@ class DBRunner(LoggingApp):
             before_concept_df, concept_df, 'matching')
         concept_df.to_csv(os.path.join(NAS_PATH, 'kermit_matching.csv'))
 
-        # tickers = np.load('./ticker_data/ticker_list.npy')
-        # ticker_dict = dict()
-        # for ticker in tickers:
-        #     s_id = snp[snp['ticker'] == ticker]['snp_companyid'].values
-        #     if len(s_id):
-        #         ticker_dict[ticker] = s_id[0]
-
-        # news_final_df = news_final_df.sort_values(
-        #     'release_time').reset_index(drop=True)
-        # for i, v in enumerate(news_final_df['ticker']):
-        #     new_row = []
-        #     for ticker in v.split(','):
-        #         if ticker_dict.get(ticker):
-        #             new_row.append(str(ticker_dict[ticker]))
-        #     new_row = ','.join(new_row)
-        #     news_final_df.loc[i, 'ticker'] = new_row
-
-        # news_final_df.to_csv('./data/develop_final.csv')
 
     def newly_news_results(self):
         news_path = os.path.join('news_result', sorted(list(
@@ -157,36 +139,12 @@ class DBRunner(LoggingApp):
         self.logger.info("Merge with sec results")
         self.generate_tables(newly_concat_df)
 
-        # self.logger.info("Send kermit_concept.csv")
-        # subprocess.run(['sshpass', '-p', password, 'scp', NAS_PATH + '/kermit_concept.csv',
-        #                 f'jw.kim@strike0001:/home/jw.kim/uploads'])
-        
-        # self.logger.info("Send unimport to import")
-        # result = subprocess.Popen(
-        #     ['sshpass', '-p', password, 'ssh', f'jw.kim@strike0001', 'bash', 'upload_KERMIT.sh', 'kermit_concept.csv'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
-        # )
-        # while result.poll() == None:
-        #     out = result.stdout.readline()
-        #     self.logger.info(out.strip())
 
         self.logger.info("Send kermit_concept.csv")
         subprocess.run(['sshpass', '-p', password, 'scp', NAS_PATH + '/kermit_concept.csv',
                         f'dncodev@192.168.1.33:/home/dncodev/KERMIT'])
-        # self.logger.info("Send unimport to import")
-        # result = subprocess.Popen(
-        #     ['sshpass', '-p', password, 'ssh', f'jw.kim@strike0001', 'bash', 'upload_KERMIT.sh', 'kermit_concept.csv'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
-        # )
-        # while result.poll() == None:
-        #     out = result.stdout.readline()
-        #     self.logger.info(out.strip())
 
         self.logger.info("Send kermit_matching.csv")
         subprocess.run(['sshpass', '-p', password, 'scp', NAS_PATH + '/kermit_matching.csv',
                         f'dncodev@192.168.1.33:/home/dncodev/KERMIT'])
-        # self.logger.info("Send unimport to import")
-        # result = subprocess.Popen(
-        #     ['sshpass', '-p', password, 'ssh', f'jw.kim@strike0001', 'bash', 'upload_KERMIT.sh', 'kermit_matching.csv'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
-        # )
-        # while result.poll() == None:
-        #     out = result.stdout.readline()
-        #     self.logger.info(out.strip())
+

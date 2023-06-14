@@ -21,10 +21,6 @@ if __name__ == '__main__':
         default=900,
         type=int
     )
-    parser.add_argument(
-        '--kensho',
-        default=False,
-    )
 
     # KeyBERT arguments
     parser.add_argument(

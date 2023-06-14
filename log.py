@@ -54,7 +54,7 @@ class LoggingApp(object):
 
     def send_slack(self, name, username, msg):
         url = 'https://hooks.slack.com/services/'
-        url += 'T0149LRKH9U/B024YSM8UCD/HIwMBKVPGYe5oQ8dO0jUObft'
+        
 
         payload = {
             'channel': name,

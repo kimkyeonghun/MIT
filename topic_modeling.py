@@ -24,7 +24,7 @@ def clean_text(text):
 
 
 BROKERS = ['bullpen0003', 'bullpen0007', 'bullpen0008', 'bullpen0009']
-password = '107kkh802as!#'
+password = '##########'
 
 
 class BERTopicRunner(LoggingApp):
@@ -84,11 +84,11 @@ class BERTopicRunner(LoggingApp):
             None: This method does not return any value.
         """
         self.logger.info("Concat files about URL data from nas")
-        NAS_PATH = '/nas/DnCoPlatformDev/execution/kyeonghun.kim/investing'
+        DATA_PATH = ''
         df = pd.DataFrame([])
-        for file in os.listdir(NAS_PATH):
+        for file in os.listdir(DATA_PATH):
             if file.startswith('bullpen') and 'develop' in file:
-                tmp = pd.read_csv(os.path.join(NAS_PATH, file), index_col=0)
+                tmp = pd.read_csv(os.path.join(DATA_PATH, file), index_col=0)
                 tmp = tmp.drop_duplicates(['data_id'])
                 tmp = tmp.dropna().reset_index(drop=True)
                 df = pd.concat([df, tmp])
@@ -102,13 +102,13 @@ class BERTopicRunner(LoggingApp):
         for d_id, tickers in gather_ticker:
             df.loc[df.data_id == d_id, 'ticker'] = tickers
 
-        df.to_csv('/home/kyeonghun.kim/BERTopic/data/develop_total.csv')
+        df.to_csv('./data/develop_total.csv')
 
         self.logger.info("Concat files about Content data from nas")
         df = pd.DataFrame([])
-        for file in os.listdir(NAS_PATH):
+        for file in os.listdir(DATA_PATH):
             if file.startswith('bullpen') and 'research' in file:
-                tmp = pd.read_csv(os.path.join(NAS_PATH, file), index_col=0)
+                tmp = pd.read_csv(os.path.join(DATA_PATH, file), index_col=0)
                 tmp = tmp.drop_duplicates(['data_id'])
                 tmp = tmp.dropna().reset_index(drop=True)
                 df = pd.concat([df, tmp])
@@ -127,7 +127,7 @@ class BERTopicRunner(LoggingApp):
         df['content'] = df['content'].apply(clean_text)
         df = df.sort_values('release_time').reset_index(drop=True)
 
-        df.to_csv('/home/kyeonghun.kim/BERTopic/data/research_total.csv')
+        df.to_csv('./data/research_total.csv')
 
     async def main(self):
         """
@@ -157,18 +157,17 @@ class BERTopicRunner(LoggingApp):
         await asyncio.gather(*tasks)
 
     def start(self, **kwargs):
-        # asyncio.run(self.main())
-        # self.send_slack("#nlp-log", 'News Crawler Bot', "Finish")
+        os.chdir('/home/kyeonghun.kim/BERTopic')
+        asyncio.run(self.main())
+        self.send_slack("#nlp-log", 'News Crawler Bot', "Finish")
         self.load_mode = kwargs.get('load_mode', False)
         self.model_name = kwargs.get('model_name', None)
         self.reduce_topic = kwargs.get('reduce_topic', 900)
-        self.kensho = kwargs.get('kensho', False)
         self.total_results()
         if self.load_mode:
             model = KBERTopic(
-                load_mode=True, model_name=self.model_name, kensho=self.kensho)
+                load_mode=True, model_name=self.model_name)
         else:
-            model = KBERTopic(reduce_topic=self.reduce_topic,
-                              kensho=self.kensho)
+            model = KBERTopic(reduce_topic=self.reduce_topic)
 
         model.run()

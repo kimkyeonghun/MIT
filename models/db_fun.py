@@ -21,13 +21,13 @@ def kermitDB_concept(ticker_hash_table):
 
 def kermitDB_mathcing(newly_concat_df, snp, ticker_hash_table):
     total_ticker_list = list(set(chain(*
-        newly_concat_df['kensho'].tolist() + newly_concat_df['common'].tolist() + newly_concat_df['kermit'].tolist()
+        newly_concat_df['origin'].tolist() + newly_concat_df['common'].tolist() + newly_concat_df['kermit'].tolist()
     )))
 
     ticker2concept = defaultdict(list)
     for ticker in total_ticker_list:
         for _, row in newly_concat_df.iterrows():
-            if ticker in row['kensho'] + row['common'] + row['kermit']:
+            if ticker in row['origin'] + row['common'] + row['kermit']:
                 ticker2concept[ticker].append(row['concept'])
 
     concept_df = pd.DataFrame([], columns = ['ticker', 'concept'])

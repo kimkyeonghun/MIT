@@ -9,54 +9,23 @@ import pandas as pd
 import numpy as np
 
 
-def load_concept(kensho: bool) -> Tuple[dict, set]:
-    if kensho:
-        with open('./concept_data/concept_kensho_list.json', 'r') as f:
-            data = json.load(f)
+def load_concept() -> Tuple[dict, set]:
+    with open('./concept_data/concept_list.json', 'r') as f:
+        data = json.load(f)
 
-        kensho_list = []
-        for _, value in data.items():
-            kensho_list.extend(value)
+    concept_list = []
+    for _, value in data.items():
+        concept_list.extend(value)
 
-        kensho_list = set(kensho_list)
+    concept_list = set(concept_list)
 
-        return data, kensho_list
-
-    else:
-        etf_df = pd.read_csv('./data/theme_ticker_equity.csv')
-        etf_concept = [string.title() for string in etf_df.theme.unique()]
-        etf_concept = set(etf_concept)
-        data = dict()
-        etf_list = []
-        for kl in etf_concept:
-            value = list(etf_df[etf_df.theme == kl.upper()].equity)
-            data[kl] = value
-            etf_list.extend(value)
-        etf_list = set(etf_list)
-
-        return data, etf_list
+    return data, concept_list
 
 
-def load_news_dataset(kensho: bool, **kwargs) -> pd.DataFrame:
-    if False:
-        df = pd.read_csv("./data/us_equities_news_dataset.csv")
-        df = df.dropna()
-        if kwargs['only_news']:
-            df = df[df.category == 'news']
-        df = df.reset_index(drop=True)
+def load_news_dataset() -> pd.DataFrame:
 
-        if kwargs['intersect']:
-            # kensho_list와 교집합임 ticker만을 새로 분류
-            new_df = pd.DataFrame([])
-            for ticker in list(kwargs['kensho_list'] & set(df.ticker.unique())):
-                if len(new_df):
-                    new_df = pd.concat([new_df, df[df.ticker == ticker]])
-                else:
-                    new_df = df[df.ticker == ticker]
-            df = new_df
-    else:
-        df = pd.read_csv("./data/research_total.csv", index_col=0)
-        df = df.dropna()
+    df = pd.read_csv("./data/research_total.csv", index_col=0)
+    df = df.dropna()
 
     return df
 

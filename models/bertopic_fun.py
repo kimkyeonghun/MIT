@@ -247,7 +247,7 @@ def zero_shot_classification(topic_model: BERTopic, concept_list: list, classifi
 
     return concept_ticker
 
-def concept2ticker(topic_model: BERTopic, concepts: list, total_tic: set, BERTopic_ticker: dict, concept_n: int, sim: float, classifier) -> Tuple[pd.DataFrame, defaultdict, str, Tuple[float]]:
+def concept2ticker(topic_model: BERTopic, concept_dict: dict, BERTopic_ticker: dict, concept_n: int, sim: float, classifier) -> Tuple[pd.DataFrame, defaultdict]:
     """
     Map each concept to the corresponding ticker using the BERTopic model and the zero-shot classifier.
     
@@ -267,76 +267,7 @@ def concept2ticker(topic_model: BERTopic, concepts: list, total_tic: set, BERTop
         scores: Tuple containing the F1 score, precision, and recall of the mapping
     """
     results_df = pd.DataFrame(
-        [], columns=['concept', 'etf', 'common', 'bertopic'])
-
-    concept_topic = zero_shot_classification(topic_model, concepts, classifier)
-    concept2news = defaultdict(list)
-    for concept in concepts.keys():
-        # concept의 word_embedding과 topic representation을 비교
-        similar_topics = find_similar_topic(
-            topic_model, concept_n, sim, concept)
-
-        zero_shot_topics = list(map(lambda x: x[0], concept_topic[concept]))
-        intersect_topics = list(set(similar_topics) | set(zero_shot_topics))
-        
-        if len(intersect_topics) == 0:
-            intersect_topics = similar_topics
-
-        intersect, tickers = [], []
-        concept2news[concept].extend(intersect_topics)
-        for st in intersect_topics:
-            tickers.extend(BERTopic_ticker[st])
-
-        # ticker 별로 value 재취합
-        tickers_dict = defaultdict(float)
-        for ticker, value in tickers:
-            tickers_dict[ticker] += value
-
-        # tickers = sorted(tickers_dict.items(),
-        #                  key=lambda x: x[1], reverse=True)[:ticker_n]
-        tickers = list(filter(lambda x: x[1]>=30, tickers_dict.items()))
-        tickers = list(map(lambda x: x[0], tickers))
-        intersect = list(set(concepts[concept]) & set(tickers))
-
-        results_df = results_df.append({"concept": concept,
-                                        "etf": list(((set(concepts[concept]) - set(intersect)) & total_tic)),
-                                        "common": intersect,
-                                        "bertopic": list(set(tickers)-set(intersect))}, ignore_index=True)
-
-    precision = cal_score(results_df['etf'], results_df['common'])
-    recall = cal_score(results_df['bertopic'], results_df['common'])
-
-    f1 = 2*((precision*recall)/(precision+recall))
-    scores = (f1, precision, recall)
-    print(f"F1-score: {scores[0]}, Precision: {scores[1]}, Recall: {scores[2]}")
-
-    concept_path = make_date_dir('./news_result')
-
-    save_file(concept_path, 'result_concept', results_df)
-
-    return results_df, concept2news, concept_path, scores
-
-def kensho_concept2ticker(topic_model: BERTopic, concept_dict: dict, BERTopic_ticker: dict, concept_n: int, sim: float, classifier) -> Tuple[pd.DataFrame, defaultdict]:
-    """
-    Map each concept to the corresponding ticker using the BERTopic model and the zero-shot classifier.
-    
-    Args:
-        topic_model: BERTopic object trained on a corpus of documents
-        concepts: Dictionary of concepts and their corresponding tickers
-        total_tic: Set of all tickers present in the documents
-        BERTopic_ticker: Dictionary of topics and their corresponding tickers
-        concept_n: Number of similar topics to consider for each concept
-        sim: Threshold for filtering similar topics based on their similarity with the concept
-        classifier: Zero-shot classifier to map topics to labels
-
-    Returns:
-        results_df: DataFrame containing the results of the mapping
-        concept2news: Dictionary of concepts and their corresponding topics
-        concept_path: Path where the results were saved
-        scores: Tuple containing the F1 score, precision, and recall of the mapping
-    """
-    results_df = pd.DataFrame(
-        [], columns=['concept', 'kensho', 'common', 'bertopic'])
+        [], columns=['concept', 'origin', 'common', 'bertopic'])
 
     concept_list = list(concept_dict.keys())
 
@@ -369,11 +300,11 @@ def kensho_concept2ticker(topic_model: BERTopic, concept_dict: dict, BERTopic_ti
         intersect = list(set(concept_dict.get(concept,[])) & set(tickers))
 
         results_df = results_df.append({"concept": concept,
-                                        "kensho": list(set(concept_dict.get(concept,[]))- set(intersect)),
+                                        "origin": list(set(concept_dict.get(concept,[]))- set(intersect)),
                                         "common": intersect,
                                         "bertopic": list(set(tickers)-set(intersect))}, ignore_index=True)
 
-    precision = cal_score(results_df['kensho'], results_df['common'])
+    precision = cal_score(results_df['origin'], results_df['common'])
     recall = cal_score(results_df['bertopic'], results_df['common'])
 
     f1 = 2*((precision*recall)/(precision+recall))
@@ -384,22 +315,6 @@ def kensho_concept2ticker(topic_model: BERTopic, concept_dict: dict, BERTopic_ti
     results_df.to_csv(os.path.join(concept_path, 'result_concept.csv'))
 
     return concept_path, concept2news, scores
-
-def kensho_df(results_df: pd.DataFrame, kensho_dict: dict):
-    new_results_df1 = pd.DataFrame(
-                [], columns=['concept', 'kensho', 'common', 'bertopic'])
-
-    for concept in kensho_dict.keys():
-        bert_tickers = results_df[results_df.concept==concept]['bertopic'].iloc[0]
-        intersect = list(set(kensho_dict.get(concept,[])) & set(bert_tickers))
-        new_results_df1 = new_results_df1.append(
-            {"concept":concept,
-            'kensho': list(set(kensho_dict.get(concept,[]))- set(intersect)),
-            'common': intersect,
-            'bertopic': list(set(bert_tickers) - set(intersect))
-            }, ignore_index=True
-        )
-    new_results_df1.to_csv('./kensho_test2.csv')
         
 
 def ticker2concept(topic_model: BERTopic, concepts: dict, total_tic: set, BERTopic_concept: dict, results_df: pd.DataFrame, concept_n: int, sim:float,):

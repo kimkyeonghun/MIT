@@ -25,7 +25,7 @@ BROKER_FILE_DICT = {'ticker_list_0.txt': 'bullpen0003', 'ticker_list_1.txt': 'bu
                     'ticker_list_2.txt': 'bullpen0008', 'ticker_list_3.txt': 'bullpen0009'}
 
 BROKERS = ['bullpen0003', 'bullpen0007', 'bullpen0008', 'bullpen0009']
-password = '107kkh802as!#'
+password = ''
 
 
 def clean_text(text):
@@ -210,9 +210,9 @@ class TickerRunner(LoggingApp):
                 subprocess.run(
                     ['scp', './ticker_data/ticker2url.json', f'kyeonghun.kim@{to_broker}:/home/kyeonghun.kim/investing'])
             else:
-                subprocess.run(['sshpass', '-p' '107kkh802as!#', 'scp', './ticker_data/ticker2url.json',
+                subprocess.run(['sshpass', '-p' f'{password}', 'scp', './ticker_data/ticker2url.json',
                                 f'kyeonghun.kim@{to_broker}:/home/kyeonghun.kim/investing'])
-                subprocess.run(['sshpass', '-p' '107kkh802as!#', 'scp', os.path.join('ticker_data', broker_file),
+                subprocess.run(['sshpass', '-p' f'{password}', 'scp', os.path.join('ticker_data', broker_file),
                                 f'kyeonghun.kim@{to_broker}:/home/kyeonghun.kim/investing'])
 
             self.logger.info(

@@ -35,7 +35,7 @@ class KeyBERTRunner(LoggingApp):
             :param self: The object that this method belongs to.
             :return: None
         """
-        with open("./concept_data/concept_kensho_des.txt", 'r') as f:
+        with open("./concept_data/concept_des.txt", 'r') as f:
             data = f.readlines()
 
         self.description = defaultdict(str)
